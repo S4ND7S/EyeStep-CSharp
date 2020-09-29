@@ -18,14 +18,13 @@ using EyeStepPackage;
         
         
         // Here is a demonstration of how to use the EyeStep
-        // External function calling remote.
+        // External function-calling remote
         
-        // Did I mention it can also bypass retcheck via spoofing?
         EmRemote fRemote = new EmRemote();
         fRemote.Load();
         
         var a_messagebox = imports.GetProcAddress(imports.GetModuleHandle("USER32.dll"), "MessageBoxA");
-        fRemote.Add("MessageBox", a_messagebox, "int", "string", "string", "int" ); // load the function/typedef
+        fRemote.Add("MessageBox", a_messagebox, "int", "string", "string", "int" ); // load the function typedef
         
         fRemote.Call("MessageBox", 0, "Test", "Test2", 0);  // call the function externally
         fRemote.Call("MessageBox", 0, "Hello", "Whats up!", 0);
@@ -41,7 +40,8 @@ using EyeStepPackage;
         
         fRemote.AddProtected("lua_newthread", util.aslr(0x13D8FB0), "int" );
         
-        // call lua_newthread and set rL to the new lua state returned
+        
+        // Call lua_newthread, and set rL to the new lua state returned
         rL = (int)fRemote.Call("lua_newthread", rL).Item1; 
         
         MessageBox.Show("NEW Lua State Thread: " + rL.ToString("X8"));
