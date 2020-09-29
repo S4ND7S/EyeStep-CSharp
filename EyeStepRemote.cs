@@ -272,8 +272,6 @@ namespace EyeStepPackage
             util.writeBytes(routine, data, size);
             util.placeJmp(routine + size, remote_loc + 6);
 
-            System.Windows.Forms.MessageBox.Show("ROUTINE: " + routine.ToString("X8"));
-
             util.writeInt(funcs_loc + (routines.Count * 4), routine);
         }
         
@@ -286,8 +284,6 @@ namespace EyeStepPackage
                 // jmp dword ptr [xxxxxxxx]
                 spoofroutine = scanner.scan("FF25????????55")[0];
                 spoofredirect = util.readInt(spoofroutine + 2);
-
-                System.Windows.Forms.MessageBox.Show(spoofroutine.ToString("X8") + " -- redirect: " + spoofredirect.ToString("X8"));
             }
 
             byte conv = util.getConvention(func, arg_types.Length);
