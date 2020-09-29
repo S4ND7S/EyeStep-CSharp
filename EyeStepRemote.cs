@@ -40,6 +40,7 @@ namespace EyeStepPackage
         public EmRemote()
         {
             routines = new List<KeyValuePair<string, int>>();
+            convention_types = new List<byte>();
             remote_loc = VirtualAllocEx(EyeStep.handle, 0, 0x7FF, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
             func_id_loc = remote_loc + 512; // function id, int value
             ret_loc_small = remote_loc + 516; // return value, 32-bit
@@ -56,6 +57,7 @@ namespace EyeStepPackage
         }
 
         List<KeyValuePair<string, int>> routines;
+        List<byte> convention_types;
 
         private int remote_loc;
         private int func_id_loc;
@@ -138,8 +140,9 @@ namespace EyeStepPackage
             byte conv = util.getConvention(func, arg_types.Length);
             int routine = VirtualAllocEx(EyeStep.handle, 0, 256, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
-            routines.Add(new KeyValuePair<string, int>(routine_name, routine)); 
-            
+            routines.Add(new KeyValuePair<string, int>(routine_name, routine));
+            convention_types.Add(conv);
+
             // load the function's calling routine
             byte[] data = new byte[256];
             int size = 0;
@@ -175,13 +178,7 @@ namespace EyeStepPackage
                 if (type == "double")
                 {
                     // load quadword onto the stack (ESP)
-                    data[size++] = 0x81; // sub esp, 00000008
-                    data[size++] = 0xEC;
-                    data[size++] = 0x08;
-                    data[size++] = 0x00;
-                    data[size++] = 0x00;
-                    data[size++] = 0x00;
-                    data[size++] = 0x0F; // movups xmm0, [ arg location ]
+                    data[size++] = 0x0F; // movq xmm0, [ arg location ]
                     data[size++] = 0x10;
                     data[size++] = 0x05;
                     bytes = BitConverter.GetBytes(args_loc + (8 * narg++));
@@ -189,9 +186,9 @@ namespace EyeStepPackage
                     data[size++] = bytes[1];
                     data[size++] = bytes[2];
                     data[size++] = bytes[3];
-                    data[size++] = 0x66; // movq [esp], xmm0
+                    data[size++] = 0xF2; // movsd [esp], xmm0
                     data[size++] = 0x0F;
-                    data[size++] = 0xD6;
+                    data[size++] = 0x11;
                     data[size++] = 0x04;
                     data[size++] = 0x24;
                 }
@@ -290,8 +287,9 @@ namespace EyeStepPackage
                 func += 3;
             }
 
-            routines.Add(new KeyValuePair<string, int>(routine_name, routine)); 
-            
+            routines.Add(new KeyValuePair<string, int>(routine_name, routine));
+            convention_types.Add(conv);
+
             // load the function's calling routine
             byte[] data = new byte[256];
             int size = 0;
@@ -327,13 +325,7 @@ namespace EyeStepPackage
                 if (type == "double")
                 {
                     // load quadword onto the stack (ESP)
-                    data[size++] = 0x81; // sub esp, 00000008
-                    data[size++] = 0xEC;
-                    data[size++] = 0x08;
-                    data[size++] = 0x00;
-                    data[size++] = 0x00;
-                    data[size++] = 0x00;
-                    data[size++] = 0x0F; // movups xmm0, [ arg location ]
+                    data[size++] = 0x0F; // movq xmm0, [ arg location ]
                     data[size++] = 0x10;
                     data[size++] = 0x05;
                     bytes = BitConverter.GetBytes(args_loc + (8 * narg++));
@@ -341,9 +333,9 @@ namespace EyeStepPackage
                     data[size++] = bytes[1];
                     data[size++] = bytes[2];
                     data[size++] = bytes[3];
-                    data[size++] = 0x66; // movq [esp], xmm0
+                    data[size++] = 0xF2; // movsd [esp], xmm0
                     data[size++] = 0x0F;
-                    data[size++] = 0xD6;
+                    data[size++] = 0x11;
                     data[size++] = 0x04;
                     data[size++] = 0x24;
                 }
@@ -467,12 +459,14 @@ namespace EyeStepPackage
         {
             int id;
             int func = 0;
+            byte conv = 0;
 
             for (id = 0; id < routines.Count; id++)
             {
                 if (routines[id].Key == routine_name)
                 {
                     func = routines[id].Value;
+                    conv = convention_types[id];
                     break;
                 }
             }
@@ -481,11 +475,29 @@ namespace EyeStepPackage
 
             // Append the args backwards to make
             // the calling mechanism simpler
-            for (int i = 0, narg = args.Length - 1; narg >= 0; narg--, i++)
+            for (int i = 0; i < args.Length; i++)
             {
-                function_arg arg;
+                object raw_arg;
 
-                var raw_arg = args[narg];
+                // the way I set it up is, the first 2 args
+                // stored at arg location will be placed in
+                // ECX or EDX when required.
+                if (conv == util.c_thiscall && i == 0)
+                {
+                    raw_arg = args[i];
+                }
+                else if (conv == util.c_thiscall && i < 2)
+                {
+                    raw_arg = args[i];
+                }
+                else
+                {
+                    // The rest of the args are always pushed
+                    // backwards in ASM.
+                    raw_arg = args[args.Length - 1 - i];
+                }
+
+                function_arg arg;
 
                 if (raw_arg is string) {
                     // string arg
@@ -523,6 +535,11 @@ namespace EyeStepPackage
                 {
                     util.writeDouble(args_loc + i * 8, arg.large);
                 }
+            }
+
+            if (routine_name == "lua_pushnumber")
+            {
+                System.Windows.Forms.MessageBox.Show(func.ToString("X8"));
             }
 
             util.writeInt(func_id_loc, func);
