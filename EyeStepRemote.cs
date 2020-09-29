@@ -5,6 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using static EyeStepPackage.imports;
 
+/*
+EyeStepFCR::Add("lua_getfield", 
+ 
+*/
 
 namespace EyeStepPackage
 {
@@ -88,8 +92,6 @@ namespace EyeStepPackage
             byte[] data = new byte[256];
             int size = 0;
             byte[] bytes;
-
-            System.Windows.Forms.MessageBox.Show(remote_loc.ToString("X8"));
 
             data[size++] = 0x55; // push ebp
             data[size++] = 0x8B; // mov ebp,esp
@@ -464,8 +466,6 @@ namespace EyeStepPackage
 
             util.writeBytes(routine, data, size);
             util.placeJmp(routine + size, remote_loc + 6);
-
-            System.Windows.Forms.MessageBox.Show("ROUTINE: " + routine.ToString("X8"));
 
             util.writeInt(funcs_loc + (routines.Count * 4), routine);
         }
