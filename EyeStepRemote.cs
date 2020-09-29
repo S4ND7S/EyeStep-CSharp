@@ -7,22 +7,23 @@ using static EyeStepPackage.imports;
 
 namespace EyeStepPackage
 {
+
     // Normalizes 32-bit and 64-bit values (to a single type)
-    public class function_arg
+    public class FunctionArg
     {
-        public function_arg(int x)
+        public FunctionArg(int x)
         {
             small = x;
             type = "smallvalue";
         }
 
-        public function_arg(double x)
+        public FunctionArg(double x)
         {
             large = x;
             type = "largevalue";
         }
 
-        public function_arg(string x)
+        public FunctionArg(string x)
         {
             str = x;
             type = "string";
@@ -34,13 +35,15 @@ namespace EyeStepPackage
         public string type;
     }
 
+
     // Function Emulating Remote
     public class EmRemote
     {
+        public static int function_ids;
+
         public EmRemote()
         {
-            routines = new List<KeyValuePair<string, int>>();
-            convention_types = new List<byte>();
+            routines = new Dictionary<string, RoutineInfo>();
             remote_loc = VirtualAllocEx(EyeStep.handle, 0, 0x7FF, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
             func_id_loc = remote_loc + 512; // function id, int value
             ret_loc_small = remote_loc + 516; // return value, 32-bit
@@ -56,8 +59,21 @@ namespace EyeStepPackage
             Flush();
         }
 
-        List<KeyValuePair<string, int>> routines;
-        List<byte> convention_types;
+        private struct RoutineInfo
+        {
+            public RoutineInfo(int _routine, byte _conv)
+            {
+                routine = _routine;
+                conv = _conv;
+                id = function_ids++;
+            }
+
+            public int routine;
+            public byte conv;
+            public int id;
+        }
+
+        Dictionary<string, RoutineInfo> routines;
 
         private int remote_loc;
         private int func_id_loc;
@@ -77,9 +93,9 @@ namespace EyeStepPackage
             util.placeJmp(remote_loc + 6, remote_loc + 25);
             System.Threading.Thread.Sleep(1000);
 
-            foreach (KeyValuePair<string, int> func in routines)
+            foreach (var func in routines)
             {
-                VirtualFreeEx(EyeStep.handle, func.Value, 0, MEM_RELEASE);
+                VirtualFreeEx(EyeStep.handle, func.Value.routine, 0, MEM_RELEASE);
             }
             VirtualFreeEx(EyeStep.handle, remote_loc, 0, MEM_RELEASE);
         }
@@ -140,8 +156,7 @@ namespace EyeStepPackage
             byte conv = util.getConvention(func, arg_types.Length);
             int routine = VirtualAllocEx(EyeStep.handle, 0, 256, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
-            routines.Add(new KeyValuePair<string, int>(routine_name, routine));
-            convention_types.Add(conv);
+            routines[routine_name] = new RoutineInfo(routine, conv);
 
             // load the function's calling routine
             byte[] data = new byte[256];
@@ -287,8 +302,7 @@ namespace EyeStepPackage
                 func += 3;
             }
 
-            routines.Add(new KeyValuePair<string, int>(routine_name, routine));
-            convention_types.Add(conv);
+            routines[routine_name] = new RoutineInfo(routine, conv);
 
             // load the function's calling routine
             byte[] data = new byte[256];
@@ -457,20 +471,10 @@ namespace EyeStepPackage
 
         public Tuple<UInt32, UInt64> Call(string routine_name, params object[] args)
         {
-            int id;
-            int func = 0;
-            byte conv = 0;
-
-            for (id = 0; id < routines.Count; id++)
-            {
-                if (routines[id].Key == routine_name)
-                {
-                    func = routines[id].Value;
-                    conv = convention_types[id];
-                    break;
-                }
-            }
-
+            var routine = routines[routine_name];
+            int func = routine.routine;
+            byte conv = routine.conv;
+            int id = routine.id;
             var strings = new List<KeyValuePair<int, int>>();
 
             // Append the args backwards to make
@@ -497,22 +501,22 @@ namespace EyeStepPackage
                     raw_arg = args[args.Length - 1 - i];
                 }
 
-                function_arg arg;
+                FunctionArg arg;
 
                 if (raw_arg is string) {
                     // string arg
-                    arg = new function_arg((string)raw_arg);
+                    arg = new FunctionArg((string)raw_arg);
                 } else if (
                     raw_arg is ulong
                  || raw_arg is double
                  || raw_arg is decimal
                 ) {
                     // 64-bit numerical arg
-                    arg = new function_arg((double)raw_arg);
+                    arg = new FunctionArg((double)raw_arg);
                 } else
                 {
                     // 32-bit numerical arg (in all other cases)
-                    arg = new function_arg((int)raw_arg);
+                    arg = new FunctionArg((int)raw_arg);
                 }
 
                 if (arg.type == "string")
