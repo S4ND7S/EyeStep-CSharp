@@ -24,7 +24,7 @@ using EyeStepPackage;
         fRemote.Load();
         
         var a_messagebox = imports.GetProcAddress(imports.GetModuleHandle("USER32.dll"), "MessageBoxA");
-        fRemote.Add("MessageBox", a_messagebox, "int", "string", "string", "int" ); // load the function typedef
+        fRemote.Add("MessageBox", a_messagebox, "int", "string", "string", "int" ); // load the function typedef (pls use only 'int'/'string'/'double' for now :))
         
         fRemote.Call("MessageBox", 0, "Test", "Test2", 0);  // call the function externally
         fRemote.Call("MessageBox", 0, "Hello", "Whats up!", 0);
