@@ -544,7 +544,7 @@ namespace EyeStepPackage
                     break;
                 }
 
-                System.Threading.Thread.Sleep(10);
+                System.Threading.Thread.Sleep(1);
             }
 
             // overwrite string args...
