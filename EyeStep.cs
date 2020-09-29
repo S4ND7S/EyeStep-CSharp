@@ -1492,14 +1492,18 @@ namespace EyeStepPackage
 				init();
 			}
 
-			current_proc = Process.GetProcessesByName(process_name.Replace(".exe", "")).First();
-			if (current_proc.Id != 0)
-            {
-				base_module = current_proc.MainModule.BaseAddress.ToInt32();
-				base_module_size = current_proc.MainModule.ModuleMemorySize;
+			var processes = Process.GetProcessesByName(process_name.Replace(".exe", ""));
+			if (processes.Length > 0)
+			{
+				current_proc = processes.First();
+				if (current_proc.Id != 0)
+				{
+					base_module = current_proc.MainModule.BaseAddress.ToInt32();
+					base_module_size = current_proc.MainModule.ModuleMemorySize;
 
-				handle = OpenProcess(PROCESS_ALL_ACCESS, false, current_proc.Id);
-            }
+					handle = OpenProcess(PROCESS_ALL_ACCESS, false, current_proc.Id);
+				}
+			}
 		}
 
 		public static inst read(int address)
