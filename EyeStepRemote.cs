@@ -518,7 +518,9 @@ namespace EyeStepPackage
                 if (arg.type == "string")
                 {
                     int strl = arg.str.Length;
-                    arg.small = remote_loc + 1024 + (256 * strings.Count); // VirtualAllocEx(EyeStep.handle, 0, strl, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+
+                    // use temporary storage... :[
+                    arg.small = remote_loc + 1024 + (256 * strings.Count); /*VirtualAllocEx(EyeStep.handle, 0, strl, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);*/
 
                     util.writeBytes(arg.small, Encoding.ASCII.GetBytes(arg.str));
                     util.writeInt(arg.small + strl + 4 + (strl % 4), strl);
@@ -539,14 +541,8 @@ namespace EyeStepPackage
 
             util.writeInt(func_id_loc, func);
 
-            while (true)
+            while (util.readInt(func_id_loc) != 0)
             {
-                bool finished = (util.readInt(func_id_loc) == 0);
-                if (finished)
-                {
-                    break;
-                }
-
                 System.Threading.Thread.Sleep(1);
             }
 
