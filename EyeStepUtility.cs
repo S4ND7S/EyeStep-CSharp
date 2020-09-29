@@ -144,6 +144,13 @@ namespace EyeStepPackage
 			return BitConverter.ToDouble(bytes, 0);
 		}
 
+		public static ulong readQword(int address)
+		{
+			byte[] bytes = new byte[sizeof(ulong)];
+			ReadProcessMemory(EyeStep.handle, address, bytes, sizeof(ulong), ref nothing);
+			return BitConverter.ToUInt64(bytes, 0);
+		}
+
 		public static void placeJmp(int from, int to)
 		{
 			int hook_size = 0;
@@ -247,21 +254,21 @@ namespace EyeStepPackage
 			return
 			// 1. Check for a pop ebp + retn/ret 
 			(
-				(readShort(address - 1) == 0xC35D)
+				(readUShort(address - 1) == 0xC35D)
 			  ||
-				(readShort(address - 1) == 0xC25D
-			  && readShort(address + 1) >= 0
-			  && readShort(address + 1) % 4 == 0
+				(readUShort(address - 1) == 0xC25D
+			  && readUShort(address + 1) >= 0
+			  && readUShort(address + 1) % 4 == 0
 				)
 			) 
 			  ||
 			// 2. Check for a leave + retn/ret
 			(
-				(readShort(address - 1) == 0xC3C9)
+				(readUShort(address - 1) == 0xC3C9)
 			  ||
-				(readShort(address - 1) == 0xC2C9
-			  && readShort(address + 1) >= 0
-			  && readShort(address + 1) % 4 == 0
+				(readUShort(address - 1) == 0xC2C9
+			  && readUShort(address + 1) >= 0
+			  && readUShort(address + 1) % 4 == 0
 				)
 			);
 		}
@@ -646,9 +653,10 @@ namespace EyeStepPackage
 				{
 					case 1:
 						return c_thiscall;
-
+						break;
 					case 2:
 						return c_fastcall;
+						break;
 				}
 			}
 
