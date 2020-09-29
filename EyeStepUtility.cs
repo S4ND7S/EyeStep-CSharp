@@ -586,7 +586,6 @@ namespace EyeStepPackage
 
 			int args = 0;
 			int func_start = func;
-			int func_end = epilogue;
 
 			while (!isEpilogue(epilogue))
 			{
@@ -606,7 +605,7 @@ namespace EyeStepPackage
 			// indicate the number of args that were pushed
 			// on the stack, rather than placed in ECX/EDX
 			int at = func_start;
-			while (at < func_end)
+			while (at < epilogue)
 			{
 				var i = EyeStep.read(at);
 
@@ -615,13 +614,13 @@ namespace EyeStepPackage
 					var src = i.source();
 					var dest = i.destination();
 
-					if ((src.flags & EyeStep.OP_R32) == EyeStep.OP_R32)
+					if ((src.flags & EyeStep.OP_R32) == EyeStep.OP_R32 || (src.flags & EyeStep.OP_XMM) == EyeStep.OP_XMM)
 					{
-						if ((dest.flags & EyeStep.OP_R32) == EyeStep.OP_R32)
+						if ((dest.flags & EyeStep.OP_R32) == EyeStep.OP_R32 || (dest.flags & EyeStep.OP_XMM) == EyeStep.OP_XMM)
 						{
 							if ((dest.flags & EyeStep.OP_IMM8) == EyeStep.OP_IMM8 && dest.reg[0] == EyeStep.R32_EBP && dest.imm8 != 4 && dest.imm8 < 0x7F)
 							{
-								// printf("arg offset: %02X\n", dest.imm8);
+								//System.Windows.Forms.MessageBox.Show(i.data + " -- " + util.raslr(i.address).ToString("X8") + " -- arg offset: " + dest.imm8.ToString("X2"));
 
 								if (dest.imm8 > args)
 								{
@@ -631,7 +630,7 @@ namespace EyeStepPackage
 						}
 						else if ((src.flags & EyeStep.OP_IMM8) == EyeStep.OP_IMM8 && src.reg[0] == EyeStep.R32_EBP && src.imm8 != 4 && src.imm8 < 0x7F)
 						{
-							// printf("arg offset: %02X\n", src.imm8);
+							//System.Windows.Forms.MessageBox.Show(i.data + " -- " + util.raslr(i.address).ToString("X8") + " -- arg offset: " + src.imm8.ToString("X2"));
 
 							if (src.imm8 > args)
 							{
