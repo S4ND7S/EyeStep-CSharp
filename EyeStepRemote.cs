@@ -537,11 +537,6 @@ namespace EyeStepPackage
                 }
             }
 
-            if (routine_name == "lua_pushnumber")
-            {
-                System.Windows.Forms.MessageBox.Show(func.ToString("X8"));
-            }
-
             util.writeInt(func_id_loc, func);
 
             while (true)
