@@ -5,11 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using static EyeStepPackage.imports;
 
-/*
-EyeStepFCR::Add("lua_getfield", 
- 
-*/
-
 namespace EyeStepPackage
 {
     // Normalizes 32-bit and 64-bit values (to a single type)
