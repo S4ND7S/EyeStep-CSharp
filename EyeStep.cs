@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -67,7 +67,14 @@ namespace EyeStepPackage
 		[DllImport("kernel32.dll")]
 		public static extern int VirtualFreeEx(int hProcess, int lpAddress, int size, uint allocation_type);
 
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+		public static extern int GetModuleHandle(string lpModuleName);
 
+		[DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+		public static extern int GetProcAddress(int hModule, string procName);
+
+		[DllImport("kernel32.dll")]
+		public static extern int CreateRemoteThread(int hProcess, int lpThreadAttributes, uint dwStackSize, int lpStartAddress, int lpParameter, uint dwCreationFlags, out int lpThreadId);
 	}
 
 	// See http://ref.x86asm.net/coder32.html documentation
