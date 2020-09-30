@@ -1530,8 +1530,6 @@ namespace EyeStepPackage
 				}
 			}
 
-			System.Windows.Forms.MessageBox.Show(aob);
-
 			return aob;
 		}
 
