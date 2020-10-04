@@ -523,7 +523,7 @@ namespace EyeStepPackage
 			return (x % 64) / 8;
 		}
 
-		static void init()
+		public static void init()
 		{
 			OP_TABLE = new OP_INFO[] 
 			{
