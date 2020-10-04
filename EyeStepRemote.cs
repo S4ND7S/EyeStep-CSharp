@@ -44,12 +44,12 @@ namespace EyeStepPackage
         public EmRemote()
         {
             routines = new Dictionary<string, RoutineInfo>();
-            remote_loc = VirtualAllocEx(EyeStep.handle, 0, 0x7FF, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-            func_id_loc = remote_loc + 512; // function id, int value
-            ret_loc_small = remote_loc + 516; // return value, 32-bit
-            ret_loc_large = remote_loc + 520; // return value, 64-bit
-            args_loc = remote_loc + 528; // args, 64-bit supported
-            funcs_loc = remote_loc + 680; // table index = id, value = function routine address
+            remote_loc = 0;
+            func_id_loc = 0; // function id, int value
+            ret_loc_small = 0; // return value, 32-bit
+            ret_loc_large = 0; // return value, 64-bit
+            args_loc = 0; // args, 64-bit supported
+            funcs_loc = 0; // table index = id, value = function routine address
             spoofroutine = 0;
             spoofredirect = 0;
         }
@@ -102,6 +102,14 @@ namespace EyeStepPackage
 
         public void Load()
         {
+            remote_loc = VirtualAllocEx(EyeStep.handle, 0, 0x7FF, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+
+            func_id_loc = remote_loc + 512; // function id, int value
+            ret_loc_small = remote_loc + 516; // return value, 32-bit
+            ret_loc_large = remote_loc + 520; // return value, 64-bit
+            args_loc = remote_loc + 528; // args, 64-bit supported
+            funcs_loc = remote_loc + 680; // table index = id, value = function routine address
+
             byte[] data = new byte[256];
             int size = 0;
             byte[] bytes;
@@ -147,7 +155,6 @@ namespace EyeStepPackage
 
             int thread_id = 0;
             imports.CreateRemoteThread(EyeStep.handle, 0, 0, remote_loc, 0, 0, out thread_id);
-
         }
 
 
