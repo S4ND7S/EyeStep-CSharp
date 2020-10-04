@@ -1329,9 +1329,17 @@ namespace EyeStepPackage
 				psuedocode += ")";
             }
 		};
+
+
+		public static int inject_function(int address, string code)
+		{
+			int start = (address != 0) ? address : VirtualAllocEx(EyeStep.handle, 0, 1024, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+
+
+
+			return start;
+		}
 	}
-
-
 
     public class scanner
     {
@@ -1377,14 +1385,10 @@ namespace EyeStepPackage
 		{
 			List<int> results = new List<int>();
 
-			MEMORY_BASIC_INFORMATION mbi = new MEMORY_BASIC_INFORMATION();
+			MEMORY_BASIC_INFORMATION mbi;
 
-			int scan_size = 0;
-			int bytes_read = 0;
-			int region_base = 0;
-			int protection = 0;
-			int start = 0;
-			int end = 0;
+			int start;
+			int end;
 
 			byte[] pattern = new byte[128];
 			char[] mask = new char[128];
@@ -1506,6 +1510,7 @@ namespace EyeStepPackage
 						}
 					}
 
+					//System.Windows.Forms.MessageBox.Show(start.ToString("X8"));
 					// Move onto the next region of memory.
 					start += mbi.RegionSize;
 				}
